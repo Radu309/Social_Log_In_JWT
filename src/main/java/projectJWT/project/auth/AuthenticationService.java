@@ -1,6 +1,5 @@
 package projectJWT.project.auth;
 
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,8 +10,8 @@ import projectJWT.project.model.User;
 import projectJWT.project.model.UserRole;
 import projectJWT.project.repository.UserRepository;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class AuthenticationService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
