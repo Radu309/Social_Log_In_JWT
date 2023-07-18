@@ -1,4 +1,4 @@
-package projectJWT.project.auth;
+package projectJWT.project.requestBody;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
