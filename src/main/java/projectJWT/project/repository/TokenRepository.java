@@ -12,4 +12,5 @@ public interface TokenRepository extends MongoRepository<Token, String> {
     List<Token> findAllValidTokenByUser(String id);
 
     Optional<Token> findByToken(String token);
+    Optional<Token> findByRefreshToken(String refreshToken);
 }

@@ -19,6 +19,7 @@ import projectJWT.project.model.User;
 import projectJWT.project.repository.UserRepository;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Service
@@ -42,7 +43,7 @@ public class AuthenticationService {
         var savedUser = repository.save(user);
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(savedUser, jwtToken);
+        saveUserToken(savedUser, jwtToken, refreshToken);
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
@@ -61,16 +62,54 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
-        saveUserToken(user, jwtToken);
+        saveUserToken(user, jwtToken, refreshToken);
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
                 .build();
     }
-    private void saveUserToken(User user, String jwtToken){
+    public void refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String refreshToken;
+        final String userEmail;
+        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
+            return;
+        }
+        //  EXTRACT THE TOKEN
+        refreshToken = authHeader.substring(7);
+        //  CHECK IF THE REFRESH TOKEN EXISTS
+        if(Objects.equals(tokenRepository.findByRefreshToken(refreshToken).get().getRefreshToken(), refreshToken)) {
+            //  EXTRACT THE USER
+            userEmail = jwtService.extractUsername(refreshToken);
+            //  CHECK IF THE USER EXISTS
+            if (userEmail != null) {
+                var user = this.repository.findByEmail(userEmail)
+                        .orElseThrow();
+                //  CHECK IF THE REFRESH TOKEN IS VALID
+                if (jwtService.isTokenValid(refreshToken, user)) {
+                    //  GENERATE NEW TOKENS
+                    var accessToken = jwtService.generateToken(user);
+                    var newRefreshToken = jwtService.generateRefreshToken(user);
+                    //  REMOVE THE AUTHORITIES FOR THE LAST TOKENS AND SAVE THE NEW TOKENS
+                    revokeAllUserTokens(user);
+                    saveUserToken(user, accessToken, newRefreshToken);
+                    var authResponse = AuthenticationResponse.builder()
+                            .accessToken(accessToken)
+                            .refreshToken(newRefreshToken)
+                            .build();
+                    new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+                }
+            }
+        }
+    }
+    private void saveUserToken(User user, String jwtToken, String refreshToken){
         var token = Token.builder()
                 .user(user)
                 .token(jwtToken)
+                .refreshToken(refreshToken)
                 .tokenType(TokenType.BEARER)
                 .expired(false)
                 .revoked(false)
@@ -87,32 +126,6 @@ public class AuthenticationService {
         });
         tokenRepository.saveAll(validUserTokens);
     }
-    public void refreshToken(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws IOException {
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String userEmail;
-        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-            return;
-        }
-        refreshToken = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(refreshToken);
-        if (userEmail != null) {
-            var user = this.repository.findByEmail(userEmail)
-                    .orElseThrow();
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                var accessToken = jwtService.generateToken(user);
-                revokeAllUserTokens(user);
-                saveUserToken(user, accessToken);
-                var authResponse = AuthenticationResponse.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .build();
-                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-            }
-        }
-    }
+
 
 }

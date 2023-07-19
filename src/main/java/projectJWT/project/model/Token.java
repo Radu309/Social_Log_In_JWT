@@ -22,6 +22,7 @@ public class Token {
     private String id;
     @Indexed(unique = true)
     private String token;
+    private String refreshToken;
     @Enumerated(EnumType.STRING)
     private TokenType tokenType = TokenType.BEARER;
     private boolean revoked;
