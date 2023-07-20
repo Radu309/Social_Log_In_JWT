@@ -72,38 +72,54 @@ public class AuthenticationService {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String userEmail;
-        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-            return;
-        }
-        //  EXTRACT THE TOKEN
-        refreshToken = authHeader.substring(7);
-        //  CHECK IF THE REFRESH TOKEN EXISTS
-        if(Objects.equals(tokenRepository.findByRefreshToken(refreshToken).get().getRefreshToken(), refreshToken)) {
-            //  EXTRACT THE USER
-            userEmail = jwtService.extractUsername(refreshToken);
-            //  CHECK IF THE USER EXISTS
-            if (userEmail != null) {
-                var user = this.repository.findByEmail(userEmail)
-                        .orElseThrow();
-                //  CHECK IF THE REFRESH TOKEN IS VALID
-                if (jwtService.isTokenValid(refreshToken, user)) {
-                    //  GENERATE NEW TOKENS
-                    var accessToken = jwtService.generateToken(user);
-                    var newRefreshToken = jwtService.generateRefreshToken(user);
-                    //  REMOVE THE AUTHORITIES FOR THE LAST TOKENS AND SAVE THE NEW TOKENS
-                    revokeAllUserTokens(user);
-                    saveUserToken(user, accessToken, newRefreshToken);
-                    var authResponse = AuthenticationResponse.builder()
-                            .accessToken(accessToken)
-                            .refreshToken(newRefreshToken)
-                            .build();
-                    new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+        if(request.getHeader(HttpHeaders.AUTHORIZATION) != null) {
+            final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+            final String refreshToken;
+            final String userEmail;
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return;
+            }
+            refreshToken = authHeader.substring(7);
+            //  CHECK IF THE REFRESH TOKEN EXISTS
+            var storeRefreshToken = tokenRepository.findByRefreshToken(refreshToken);
+            if (storeRefreshToken.isPresent()) {
+                if (Objects.equals(storeRefreshToken.get().getRefreshToken(), refreshToken)) {
+                    //  EXTRACT THE USER
+                    userEmail = jwtService.extractUsername(refreshToken);
+                    //  CHECK IF THE USER EXISTS
+                    if (userEmail != null) {
+                        var user = this.repository.findByEmail(userEmail)
+                                .orElseThrow();
+                        //  CHECK IF THE REFRESH TOKEN IS VALID
+                        if (jwtService.isTokenValid(refreshToken, user)) {
+                            //  GENERATE NEW TOKENS
+                            var accessToken = jwtService.generateToken(user);
+                            var newRefreshToken = jwtService.generateRefreshToken(user);
+                            //  REMOVE THE AUTHORITIES FOR THE LAST TOKENS AND SAVE THE NEW TOKENS
+                            revokeAllUserTokens(user);
+                            saveUserToken(user, accessToken, newRefreshToken);
+                            var authResponse = AuthenticationResponse.builder()
+                                    .accessToken(accessToken)
+                                    .refreshToken(newRefreshToken)
+                                    .build();
+                            new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+                        } else {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid refresh token");
+                        }
+                    } else {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "User not found");
+                    }
+                } else {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid refresh token");
                 }
+            } else {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Refresh token not found");
             }
         }
+        else {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "NULL token");
+        }
+
     }
     private void saveUserToken(User user, String jwtToken, String refreshToken){
         var token = Token.builder()
