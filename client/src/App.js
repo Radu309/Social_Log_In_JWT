@@ -1,23 +1,16 @@
-import logo from './logo.svg';
 import './App.css';
+import {useEffect} from "react";
+import LoginButton from "./components/login";
+import LogoutButton from "./components/logout";
+
+const clientId = "218049732892-biibgbig5rri4nrgm4v9kelj0fff8nkv.apps.googleusercontent.com";
 
 function App() {
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <LoginButton />
+      <LogoutButton />
     </div>
   );
 }

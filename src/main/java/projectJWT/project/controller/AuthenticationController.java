@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import projectJWT.project.requestBody.AuthenticationRequest;
 import projectJWT.project.requestBody.AuthenticationResponse;
@@ -11,6 +12,7 @@ import projectJWT.project.service.AuthenticationService;
 import projectJWT.project.requestBody.RegisterRequest;
 
 import java.io.IOException;
+
 
 @RestController
 //@RequestMapping("/api/v1/auth")
@@ -34,8 +36,21 @@ public class AuthenticationController {
     ) throws IOException {
         service.refreshToken(request, response);
     }
-    @GetMapping("/api/v1/demo-controller")
-    public ResponseEntity<String> sayHello(){
+    @GetMapping("/api/v1/check-token")
+    public ResponseEntity<String> checkToken(){
+        return ResponseEntity.ok("Good Token");
+    }
+    @GetMapping("/api/v1/demo")
+    public ResponseEntity<String> sayHello1(){
         return ResponseEntity.ok("Hello from secured endpoint");
+    }
+    @GetMapping("/api/v1/auth/demo")
+    public ResponseEntity<String> sayHello2(){
+        return ResponseEntity.ok("Hello from secured endpoint");
+    }
+    @GetMapping("/login/oauth2/code/google")
+    public String getLoginInfo(OAuth2AuthenticationToken authentication) {
+        System.out.println(authentication);
+        return "loginSuccess";
     }
 }
