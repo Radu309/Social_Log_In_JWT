@@ -8,17 +8,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import projectJWT.project.model.User;
-import projectJWT.project.repository.UserRepository;
-import projectJWT.project.service.AuthenticationService;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 
 @Configuration
@@ -27,14 +21,16 @@ import java.util.stream.Collectors;
 public class SecurityConfiguration{
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
-    private final UserRepository userRepository;
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
     @Autowired
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
                                  AuthenticationProvider authenticationProvider,
-                                 UserRepository userRepository) {
+                                 OAuth2AuthorizedClientService authorizedClientService
+                                ) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
-        this.userRepository= userRepository;
+        this.authorizedClientService = authorizedClientService;
     }
 
     @Bean
@@ -55,46 +51,116 @@ public class SecurityConfiguration{
                 // used for setting other configurations
                 .and()
                 // sets the custom authentication provider to be used for authenticating users
-                .authenticationProvider(authenticationProvider)
+//                .authenticationProvider(authenticationProvider)
                 // this filter will process JWT-based authentication for incoming requests.
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .oauth2Login()
-                    .successHandler((request, response, authentication) -> {
-//                        System.out.println("AuthenticationSuccessHandler invoked");
-//                        System.out.println("Authentication name: " + authentication.getName());
-//                        System.out.println(authentication.getDetails());
-//                        System.out.println(authentication.getCredentials());
-                        DefaultOidcUser defaultUser = (DefaultOidcUser) authentication.getPrincipal();
-//                        System.out.println(defaultUser.getEmail());
-//                        System.out.println(defaultUser.getUserInfo());
-//                        System.out.println(defaultUser);
-//                        System.out.println(request);
+//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
-                                (response.getHeaderNames())
-                                .stream()
-                                        .forEach(System.out::println);
+                .oauth2Login();
+//                    .successHandler( new CustomAuthenticationSuccessHandler(authorizedClientService));
+//
+//                            (request, response, authentication) -> {
+//
+//                        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+//                        String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
+//                        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(clientRegistrationId, oauthToken.getName());
+//                        String accessToken = authorizedClient.getAccessToken().getTokenValue();
+//                        System.out.println(accessToken);
+//
+//                    });
+                /*
+                .authorizationEndpoint()
+                .baseUri("/oauth2/authorization")
+                .authorizationRequestRepository(authorizationRequestRepository())
+                .and()
+                .tokenEndpoint()
+                .accessTokenResponseClient(accessTokenResponseClient())
+                .and()
+                .defaultSuccessUrl("/api/v1/auth/login-success")
+                .failureUrl("/api/v1/auth/fail");
 
-                        System.out.println(response.getHeader("Set-Cookie"));
-                        System.out.println(response.getOutputStream());
-                        System.out.println(response.getHeaderNames());
-                        response.setHeader("Auth","123");
-//                        System.out.println(SecurityContextHolder.getContext().getAuthentication());
-//                        System.out.println(SecurityContextHolder.getContext());
-//                        CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
-//                        userService.processOAuthPostLogin(oauthUser.getEmail());
-                        String userEmail = defaultUser.getEmail();
-                        User user = userRepository.findByEmail(userEmail)
-                                .orElseThrow();
-                        System.out.println(user);
+                 */
 
-                        if(userRepository.findByEmail(userEmail).isPresent()) {
-                            System.out.println("GAAAAAAAAAAAAAAAAAAAAAAASIT");
-
-
-                        }
-//                        response.sendRedirect("/api/v1/auth/demo");
-                    });
-
+//                    .successHandler((request, response, authentication) -> {
+////
+////                        DefaultOidcUser defaultUser = (DefaultOidcUser) authentication.getPrincipal();
+//
+////                                (response.getHeaderNames())
+////                                .stream()
+////                                        .forEach(System.out::println);
+//
+////
+////                        response.setHeader("Auth","123");
+////                        CustomOAuth2User oauthUser = (CustomOAuth2User) authentication.getPrincipal();
+////                        userService.processOAuthPostLogin(oauthUser.getEmail());
+////                        String userEmail = defaultUser.getEmail();
+////                        User user = userRepository.findByEmail(userEmail)
+////                                .orElseThrow();
+////                        System.out.println(user);
+//
+////                        if(userRepository.findByEmail(userEmail).isPresent()) {
+////                            System.out.println("GAAAAAAAAAAAAAAAAAAAAAAASIT");
+////                        }
+////                        response.sendRedirect("/api/v1/auth/demo");
+//                    });
         return http.build();
     }
+
+    /*
+    @Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }
+    @Bean
+    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
+        return new DefaultAuthorizationCodeTokenResponseClient();
+    }
+    // additional configuration for non-Spring Boot projects
+    private static final List<String> clients = Arrays.asList("google", "facebook");
+
+    //    @Bean
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        List<ClientRegistration> registrations = new ArrayList<>();
+        for (String client : clients) {
+            // Get the ClientRegistration object for the current client name
+            ClientRegistration registration = getRegistration(client);
+
+            // Check if the registration is not null before adding it to the list
+            if (registration != null) {
+                registrations.add(registration);
+            }
+        }
+        return new InMemoryClientRegistrationRepository(registrations);
+    }
+    //    @Bean
+    public OAuth2AuthorizedClientService authorizedClientService() {
+        return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository());
+    }
+    @Autowired
+    private Environment env;
+    private ClientRegistration getRegistration(String client) {
+        String CLIENT_PROPERTY_KEY = "spring.security.oauth2.client.registration.";
+
+        String clientId = env.getProperty(CLIENT_PROPERTY_KEY + client + ".client-id");
+
+        if (clientId == null) {
+            return null;
+        }
+        String clientSecret = env.getProperty(CLIENT_PROPERTY_KEY + client + ".client-secret");
+        if (client.equals("google")) {
+            return CommonOAuth2Provider.GOOGLE.getBuilder(client)
+                    .clientId(clientId)
+                    .clientSecret(clientSecret)
+                    .build();
+        }
+        if (client.equals("facebook")) {
+            return CommonOAuth2Provider.FACEBOOK.getBuilder(client)
+                    .clientId(clientId)
+                    .clientSecret(clientSecret)
+                    .build();
+        }
+        return null;
+    }
+
+     */
+
 }
