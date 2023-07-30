@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -23,6 +24,7 @@ public class Token {
     @Indexed(unique = true)
     private String token;
     private String refreshToken;
+    private Date valid;
     @Enumerated(EnumType.STRING)
     private TokenType tokenType = TokenType.BEARER;
     private boolean revoked;

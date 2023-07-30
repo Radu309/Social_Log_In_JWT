@@ -95,7 +95,7 @@ public class AuthenticationService {
                         var user = this.repository.findByEmail(userEmail)
                                 .orElseThrow();
                         //  CHECK IF THE REFRESH TOKEN IS VALID
-                        if (jwtService.isTokenValid(refreshToken, user)) {
+                        if (jwtService.isTokenValid(refreshToken, user) && !storeRefreshToken.get().isExpired()) {
                             //  GENERATE NEW TOKENS
                             var accessToken = jwtService.generateToken(user);
                             var newRefreshToken = jwtService.generateRefreshToken(user);
@@ -130,6 +130,7 @@ public class AuthenticationService {
                 .user(user)
                 .token(jwtToken)
                 .refreshToken(refreshToken)
+                .valid(jwtService.extractExpiration(jwtToken))
                 .tokenType(TokenType.BEARER)
                 .expired(false)
                 .revoked(false)

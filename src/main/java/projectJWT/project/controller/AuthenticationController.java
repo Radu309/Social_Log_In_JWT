@@ -1,26 +1,17 @@
 package projectJWT.project.controller;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import projectJWT.project.requestBody.AuthenticationRequest;
 import projectJWT.project.requestBody.AuthenticationResponse;
 import projectJWT.project.service.AuthenticationService;
 import projectJWT.project.requestBody.RegisterRequest;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 @RestController
@@ -61,9 +52,5 @@ public class AuthenticationController {
     public ResponseEntity<String> sayHello3(){
         return ResponseEntity.ok("Hello from failed secured endpoint");
     }
-
-
-
-
 
 }

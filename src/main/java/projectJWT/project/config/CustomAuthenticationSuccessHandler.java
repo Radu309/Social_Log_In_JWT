@@ -64,6 +64,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         responseBody.put("Issued at = ", tokenIssued);
         responseBody.put("Expired at = ", tokenExpired);
 
+        System.out.println(accessToken);
+
         // Convert the response object to JSON.
         String jsonResponse = objectMapper.writeValueAsString(responseBody);
 
