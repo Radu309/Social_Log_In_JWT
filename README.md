@@ -1,6 +1,6 @@
 # ReadMe
 
-Cookie Information
+Cookie Information 
 Cookies are small files of information that a web server generates and sends to a web browser. Web browsers store the cookies they receive for a predetermined period of time or for the length of a user's session on a website. They attach the relevant cookies to any future request the user makes of the web server.
 
 The cookies used on the Internet are also called "HTTP cookies" and are sent using the HTTP protocol.
