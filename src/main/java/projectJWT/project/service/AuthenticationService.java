@@ -8,16 +8,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import projectJWT.project.model.Token;
 import projectJWT.project.model.TokenType;
 import projectJWT.project.repository.TokenRepository;
-import projectJWT.project.requestBody.AuthenticationRequest;
-import projectJWT.project.requestBody.AuthenticationResponse;
-import projectJWT.project.requestBody.RegisterRequest;
+import projectJWT.project.DTO.AuthenticationRequest;
+import projectJWT.project.DTO.AuthenticationResponse;
+import projectJWT.project.DTO.RegisterRequest;
 import projectJWT.project.model.User;
 import projectJWT.project.repository.UserRepository;
 
@@ -31,6 +28,8 @@ public class AuthenticationService {
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    // AuthenticationManager is responsible for authenticating (verifying the identity of) users and determining
+    // if a user is allowed to access certain resources or perform specific actions within the application.
     private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(RegisterRequest request) {

@@ -31,14 +31,17 @@ public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final JwtService jwtService;
+    private final CorsFilter corsFilter;
     @Autowired
     public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
                                  AuthenticationProvider authenticationProvider,
-                                 JwtService jwtService
+                                 JwtService jwtService,
+                                 CorsFilter corsFilter
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
         this.jwtService = jwtService;
+        this.corsFilter = corsFilter;
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,7 +52,7 @@ public class SecurityConfiguration {
                 // initiates the configuration of authorization rules for incoming requests.
                 .authorizeHttpRequests()
                 // give all permissions for the next endPont
-                .requestMatchers("/api/v1/auth/**", "/api/v1/check-token").permitAll()
+                .requestMatchers("/api/v1/auth/**", "/api/v1/check-token", "/login", "/oauth2/**").permitAll()
                 // requires authentication for any other endPoints
                 .anyRequest().authenticated()
                 // used for setting other configurations
@@ -61,10 +64,14 @@ public class SecurityConfiguration {
                 // sets the custom authentication provider to be used for authenticating users
                 .authenticationProvider(authenticationProvider)
                 // this filter will process JWT-based authentication for incoming requests.
+                // Spring Security will invoke the UsernamePasswordAuthenticationFilter to handle the jwtAuthFilter process.
+                // UsernamePasswordAuthenticationFilter will know your credentials for this (this is another filter)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(corsFilter, JwtAuthenticationFilter.class)
 
                 .oauth2Login()
                 .successHandler((request, response, authentication) -> {
+                    System.out.println("123123123");
                     DefaultOidcUser defaultUser = (DefaultOidcUser) authentication.getPrincipal();
                     String userEmail = defaultUser.getEmail();
                     User user = User.builder().email(userEmail).userRole(UserRole.USER).build();
@@ -79,9 +86,10 @@ public class SecurityConfiguration {
                     int dateCookie = (int)(jwtService.extractExpiration(token).getTime() - currentDate.getTime());
                     accessTokenCookie.setMaxAge(dateCookie);
                     accessTokenCookie.setPath("/");
-
                     response.addCookie(accessTokenCookie);
-                    response.sendRedirect("/api/v1/auth/demo");
+
+                    System.out.println(userEmail);
+//                    response.sendRedirect("/api/v1/auth/demo");
                 });
         return http.build();
     }

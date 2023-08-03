@@ -48,10 +48,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         }
+        System.out.println("TOKEN: " + jwt);
         if (jwt == null || jwt.isBlank() || request.getServletPath().contains("/api/v1/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
+        System.out.println("TOKEEEEEEN NOT NULL");
         Optional<Token> currentToken = tokenRepository.findByToken(jwt);
         if(currentToken.isEmpty()){
             filterChain.doFilter(request, response);
@@ -104,6 +106,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }catch (ExpiredJwtException ex1){
                 System.out.println("Refresh token expired");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                System.out.println("HERE IS 401 ERROR");
+                return;
             }
             filterChain.doFilter(request, response);
         }

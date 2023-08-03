@@ -1,15 +1,14 @@
 package projectJWT.project.controller;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import projectJWT.project.requestBody.AuthenticationRequest;
-import projectJWT.project.requestBody.AuthenticationResponse;
+import projectJWT.project.DTO.AuthenticationRequest;
+import projectJWT.project.DTO.AuthenticationResponse;
 import projectJWT.project.service.AuthenticationService;
-import projectJWT.project.requestBody.RegisterRequest;
+import projectJWT.project.DTO.RegisterRequest;
 
 import java.io.IOException;
 
@@ -41,8 +40,12 @@ public class AuthenticationController {
         return ResponseEntity.ok("Good Token");
     }
     @GetMapping("/api/v1/demo")
-    public ResponseEntity<String> sayHello1(){
+    public ResponseEntity<String> sayHello(){
         return ResponseEntity.ok("Hello from secured endpoint");
+    }
+    @GetMapping("/api/v1/demo1")
+    public ResponseEntity<String> sayHello1(){
+        return ResponseEntity.ok("Hello from ANOTHER secured endpoint");
     }
     @GetMapping("/api/v1/auth/demo")
     public ResponseEntity<String> sayHello2(){
